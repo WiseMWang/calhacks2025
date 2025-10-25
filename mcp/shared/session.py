@@ -11,9 +11,9 @@ from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStre
 from pydantic import BaseModel
 from typing_extensions import Self
 
-from shared.exceptions import McpError
-from shared.message import MessageMetadata, ServerMessageMetadata, SessionMessage
-from types import (
+from mcp.shared.exceptions import McpError
+from mcp.shared.message import MessageMetadata, ServerMessageMetadata, SessionMessage
+from mcp.types import (
     CONNECTION_CLOSED,
     INVALID_PARAMS,
     CancelledNotification,
