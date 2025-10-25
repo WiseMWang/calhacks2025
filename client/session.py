@@ -8,11 +8,11 @@ from jsonschema import SchemaError, ValidationError, validate
 from pydantic import AnyUrl, TypeAdapter
 from typing_extensions import deprecated
 
-import mcp.types as types
-from mcp.shared.context import RequestContext
-from mcp.shared.message import SessionMessage
-from mcp.shared.session import BaseSession, ProgressFnT, RequestResponder
-from mcp.shared.version import SUPPORTED_PROTOCOL_VERSIONS
+import types
+from shared.context import RequestContext
+from shared.message import SessionMessage
+from shared.session import BaseSession, ProgressFnT, RequestResponder
+from shared.version import SUPPORTED_PROTOCOL_VERSIONS
 
 DEFAULT_CLIENT_INFO = types.Implementation(name="mcp", version="0.1.0")
 

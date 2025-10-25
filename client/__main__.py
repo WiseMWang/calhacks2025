@@ -10,8 +10,8 @@ from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStre
 import types
 from client.session import ClientSession
 from client.stdio import StdioServerParameters, stdio_client
-from mcp.shared.message import SessionMessage
-from mcp.shared.session import RequestResponder
+from shared.message import SessionMessage
+from shared.session import RequestResponder
 
 if not sys.warnoptions:
     import warnings
