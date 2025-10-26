@@ -10,6 +10,7 @@ import logging
 from typing import Dict, Any, Callable
 from tools.gmail_tools import send_email, GmailTools
 #from tools.drive_tools import DriveTools
+from mcp.types import LATEST_PROTOCOL_VERSION, DEFAULT_NEGOTIATED_VERSION
 
 # Set up logging to stderr (stdout is used for JSON-RPC communication)
 logging.basicConfig(
@@ -133,7 +134,7 @@ class MCPServer:
         elif method == "initialize":
             # Handle initialization request
             return {
-                "protocolVersion": "1.0",
+                "protocolVersion": LATEST_PROTOCOL_VERSION,
                 "serverInfo": {
                     "name": "google-workspace-mcp-server",
                     "version": "0.1.0"
