@@ -147,7 +147,7 @@ class MCPServer:
         elif method == "notifications/initialized":
         # Client confirms initialization complete
             logger.info("Client initialized successfully")
-            return None  # Notifications don't get responses
+            return "notification" # Notifications don't get responses
 
         else:
             raise ValueError(f"Unknown method: {method}")
@@ -174,23 +174,34 @@ class MCPServer:
                     result = self.handle_request(request)
 
                     # Build JSON-RPC response
-                    response = {
-                        "jsonrpc": "2.0",
-                        "id": request_id,
-                        "result": result
-                    }
+                    if request_id is not None:
+                        # Ensure result is a dict
+                        if result is None:
+                            result = {}
+                        elif not isinstance(result, dict):
+                            result = {"content": result}  # wrap non-dict results
+
+                        response = {
+                            "jsonrpc": "2.0",
+                            "id": request_id if request_id is not None else 0,
+                            "result": result
+                        }
+                        if request_id is not None and result != "notification":
+                            print(json.dumps(response), flush=True)
 
                 except Exception as e:
                     logger.error(f"Error handling request: {e}", exc_info=True)
                     # Build JSON-RPC error response
-                    response = {
-                        "jsonrpc": "2.0",
-                        "id": request.get("id") if 'request' in locals() else None,
-                        "error": {
-                            "code": -32603,  # Internal error
-                            "message": str(e)
+                    if 'request' in locals() and request.get("id") is not None:
+                        error_response = {
+                            "jsonrpc": "2.0",
+                            "id": request.get("id"),
+                            "error": {
+                                "code": -32603,
+                                "message": str(e)
+                            }
                         }
-                    }
+                        print(json.dumps(error_response), flush=True)
 
                 # Send response to stdout (client reads from here)
                 print(json.dumps(response), flush=True)
