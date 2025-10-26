@@ -14,10 +14,6 @@ from tools.gmail_tools import GmailTools
 #from tools.drive_tools import DriveTools
 from mcp.types import LATEST_PROTOCOL_VERSION, DEFAULT_NEGOTIATED_VERSION
 
-load_dotenv()
-
-creds_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
-
 # Set up logging to stderr (stdout is used for JSON-RPC communication)
 logging.basicConfig(
     level=logging.INFO,
