@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 import logging
+import asyncio
+import os
+from mcp.client.llm_client import run_llm_query
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -21,8 +24,16 @@ def chat():
         
         logger.info(f"Received message: {user_message}")
         
-        # For now, just echo back (replace with LLM later)
-        response = f"Echo: {user_message}"
+        # Get OpenAI API key from environment
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            return jsonify({
+                'success': False,
+                'error': 'OpenAI API key not found. Set OPENAI_API_KEY environment variable.'
+            }), 500
+        
+        # Run LLM query with MCP integration
+        response = asyncio.run(run_llm_query(user_message, api_key))
         
         return jsonify({
             'success': True,
