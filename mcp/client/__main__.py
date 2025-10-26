@@ -69,9 +69,21 @@ def cli():
         help="Environment variables to set. Can be used multiple times.",
         default=[],
     )
+    parser.add_argument("--llm-query", help="Query to send to GPT-4 with MCP tools")
+    parser.add_argument("--api-key", help="OpenAI API key for LLM queries")
 
     args = parser.parse_args()
-    anyio.run(partial(main, args.command_or_url, args.args, args.env), backend="trio")
+    
+    if args.llm_query:
+        from .llm_client import LLMClient
+        if not args.api_key:
+            print("Error: --api-key required for LLM queries")
+            sys.exit(1)
+        client = LLMClient(args.api_key)
+        result = client.query(args.llm_query)
+        print(result)
+    else:
+        anyio.run(partial(main, args.command_or_url, args.args, args.env), backend="trio")
 
 
 if __name__ == "__main__":

@@ -32,7 +32,3 @@ class GmailTools:
             userId='me', id=message_id
         ).execute()
 
-# Standalone function for backward compatibility
-def send_email(to, subject, body, cc=None):
-    gmail = GmailTools()
-    return gmail.send_email(to, subject, body, cc)

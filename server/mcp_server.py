@@ -8,7 +8,7 @@ import json
 import sys
 import logging
 from typing import Dict, Any, Callable
-from tools.gmail_tools import send_email, GmailTools
+from tools.gmail_tools import GmailTools
 #from tools.drive_tools import DriveTools
 from mcp.types import LATEST_PROTOCOL_VERSION, DEFAULT_NEGOTIATED_VERSION
 
