@@ -14,10 +14,6 @@ from tools.gmail_tools import GmailTools
 #from tools.drive_tools import DriveTools
 from mcp.types import LATEST_PROTOCOL_VERSION, DEFAULT_NEGOTIATED_VERSION
 
-load_dotenv()
-
-creds_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
-
 # Set up logging to stderr (stdout is used for JSON-RPC communication)
 logging.basicConfig(
     level=logging.INFO,
@@ -34,7 +30,13 @@ class MCPServer:
         """Initialize MCP server with available tools"""
         # Initialize tool modules and put path for your Gmail API JSON
         self.gmail_tools = GmailTools(credentials_path="./credentials.json")
-       # self.drive_tools = DriveTools()
+        # self.drive_tools = DriveTools()
+
+        try:
+            email = self.gmail_tools.get_authenticated_email()
+            logger.info(f"✅ MCP Server Gmail account: {email}")
+        except Exception as e:
+            logger.warning(f"Could not retrieve Gmail account: {e}")
 
         # Register available tools
         self.tools = {
