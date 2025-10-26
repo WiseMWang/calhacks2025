@@ -32,8 +32,8 @@ class MCPServer:
 
     def __init__(self):
         """Initialize MCP server with available tools"""
-        # Initialize tool modules
-        self.gmail_tools = GmailTools(credentials_path=creds_path)
+        # Initialize tool modules and put path for your Gmail API JSON
+        self.gmail_tools = GmailTools(credentials_path="./credentials.json")
        # self.drive_tools = DriveTools()
 
         # Register available tools
