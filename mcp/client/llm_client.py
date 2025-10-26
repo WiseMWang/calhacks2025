@@ -34,7 +34,7 @@ class LLMClient:
         
         return await self.session.call_tool(name, arguments)
     
-    async def query(self, user_input, server_command="python", server_args=["server/mcp_server.py"]):
+    async def query(self, user_input, server_command="python", server_args=["../../server/mcp_server.py"]):
         """Query GPT-4o-mini with MCP tools"""
         await self.connect_to_server(server_command)
         
@@ -93,7 +93,7 @@ class LLMClient:
             if self.stdio_context:
                 await self.stdio_context.__aexit__(None, None, None)
 
-async def run_llm_query(query, api_key, server_command="python", server_args=["server/mcp_server.py"]):
+async def run_llm_query(query, api_key, server_command="python", server_args=["../../server/mcp_server.py"]):
     """Run LLM query with MCP integration"""
     client = LLMClient(api_key)
     return await client.query(query, server_command, server_args)
