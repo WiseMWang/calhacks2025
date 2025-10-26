@@ -1,5 +1,13 @@
 from flask import Flask, render_template, request, jsonify
 import logging
+import subprocess
+import json
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+
+# Load environment variables
+load_dotenv()
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -24,8 +32,8 @@ def chat():
         
         logger.info(f"Received message: {user_message}")
         
-        # For now, just echo back (replace with LLM later)
-        response = f"Echo: {user_message}"
+        # Simple approach: Call OpenAI directly with tool definitions
+        response = chat_with_mcp_tools(user_message)
         
         return jsonify({
             'success': True,
