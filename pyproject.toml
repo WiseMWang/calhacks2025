@@ -11,5 +11,7 @@ dependencies = [
     "google-auth-httplib2>=0.2.0",
     "google-auth-oauthlib>=1.2.2",
     "mcp[cli]>=1.19.0",
+    "openai>=2.6.1",
+    "python-dotenv>=1.1.1",
     "trio>=0.31.0",
 ]

@@ -1,13 +1,29 @@
 import openai
 import anyio
+#from mcp.client.session import ClientSession
+#from mcp.client.stdio import StdioServerParameters, stdio_client
+#import mcp.types as types
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
-import mcp.types as types
+from mcp import types  # Change this
 import json
+import os
+import logging
+from typing import Optional, Dict, Any, List
+from dotenv import load_dotenv
+from openai import OpenAI
+
+# Load environment variables
+load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 class LLMClient:
-    def __init__(self, api_key):
-        self.client = openai.OpenAI(api_key=api_key)
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+        if not self.api_key:
+            raise ValueError("OpenAI API key not found")
+        self.client = openai.OpenAI(api_key=self.api_key)
         self.session = None
     
     async def connect_to_server(self, server_command):
