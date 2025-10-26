@@ -61,28 +61,28 @@ class MCPServer:
                         "required": ["to", "subject", "body"]
                     }
                 }
-            },
-            "search_drive_files": {
-                "function": self.drive_tools.search_files,
-                "schema": {
-                    "name": "search_drive_files",
-                    "description": "Search for files in Google Drive by name or query",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "query": {
-                                "type": "string",
-                                "description": "Search query (file name or keywords)"
-                            },
-                            "max_results": {
-                                "type": "integer",
-                                "description": "Maximum number of results to return (default: 10)"
-                            }
-                        },
-                        "required": ["query"]
-                    }
-                }
-            }
+            }#,
+            # "search_drive_files": {
+            #     "function": self.drive_tools.search_files,
+            #     "schema": {
+            #         "name": "search_drive_files",
+            #         "description": "Search for files in Google Drive by name or query",
+            #         "parameters": {
+            #             "type": "object",
+            #             "properties": {
+            #                 "query": {
+            #                     "type": "string",
+            #                     "description": "Search query (file name or keywords)"
+            #                 },
+            #                 "max_results": {
+            #                     "type": "integer",
+            #                     "description": "Maximum number of results to return (default: 10)"
+            #                 }
+            #             },
+            #             "required": ["query"]
+            #         }
+            #     }
+            # }
         }
 
         logger.info(f"MCP Server initialized with {len(self.tools)} tools")
@@ -143,6 +143,11 @@ class MCPServer:
                     "tools": {}
                 }
             }
+        
+        elif method == "notifications/initialized":
+        # Client confirms initialization complete
+            logger.info("Client initialized successfully")
+            return None  # Notifications don't get responses
 
         else:
             raise ValueError(f"Unknown method: {method}")
