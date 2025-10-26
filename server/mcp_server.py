@@ -169,6 +169,7 @@ class MCPServer:
                     # Parse JSON-RPC request
                     request = json.loads(line)
                     request_id = request.get("id")
+                    logger.debug(f"Received request id: {request_id}")
 
                     # Process request
                     result = self.handle_request(request)
@@ -179,15 +180,19 @@ class MCPServer:
                         if result is None:
                             result = {}
                         elif not isinstance(result, dict):
-                            result = {"content": result}  # wrap non-dict results
+                            result = {"content": result}
 
                         response = {
                             "jsonrpc": "2.0",
-                            "id": request_id if request_id is not None else 0,
+                            "id": request_id,
                             "result": result
                         }
-                        if request_id is not None and result != "notification":
-                            print(json.dumps(response), flush=True)
+
+                        # Only send responses for requests (not notifications)
+                        print(json.dumps(response), flush=True)
+                    else:
+                        # It's a notification (no response expected)
+                        logger.debug(f"Ignoring notification method: {request.get('method')}")
 
                 except Exception as e:
                     logger.error(f"Error handling request: {e}", exc_info=True)
@@ -202,9 +207,6 @@ class MCPServer:
                             }
                         }
                         print(json.dumps(error_response), flush=True)
-
-                # Send response to stdout (client reads from here)
-                print(json.dumps(response), flush=True)
 
         except KeyboardInterrupt:
             logger.info("Server shutting down...")
