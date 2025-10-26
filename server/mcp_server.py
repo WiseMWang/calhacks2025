@@ -1,9 +1,3 @@
-import json
-import sys
-import logging
-from typing import Dict, Any, Callable
-from tools.gmail_tools import send_email, GmailTools
-
 #!/usr/bin/env python3
 """
 MCP Server - Implements Model Context Protocol from scratch
