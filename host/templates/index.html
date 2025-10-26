@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalHacks MCP - AI Gmail Assistant</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Gmail Assistant</h1>
+        <p class="subtitle">Send emails using natural language with MCP-powered AI</p>
+
+        <div class="examples">
+            <h3>💡 Try these examples:</h3>
+            <span class="example-chip" onclick="setInput('Send an email to john@example.com saying hello')">Send a simple email</span>
+            <span class="example-chip" onclick="setInput('Email sarah@company.com about tomorrow meeting at 2pm')">Schedule meeting email</span>
+            <span class="example-chip" onclick="setInput('Send a thank you email to team@startup.com')">Thank you email</span>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message system">👋 Welcome! Tell me what email you'd like to send.</div>
+        </div>
+
+        <div class="input-container">
+            <input 
+                type="text" 
+                id="userInput" 
+                placeholder="e.g., Send an email to john@example.com saying hello..."
+                onkeypress="handleKeyPress(event)"
+            >
+            <button onclick="sendMessage()" id="sendBtn">Send</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>Processing...</span>
+        </div>
+    </div>
+
+    <script src="../static/script.js"></script>
+</body>
+</html>
