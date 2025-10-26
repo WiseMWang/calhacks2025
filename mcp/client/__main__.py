@@ -7,11 +7,11 @@ from urllib.parse import urlparse
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 
-import types
-from client.session import ClientSession
-from client.stdio import StdioServerParameters, stdio_client
-from shared.message import SessionMessage
-from shared.session import RequestResponder
+import mcp.types as types
+from mcp.client.session import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.shared.message import SessionMessage
+from mcp.shared.session import RequestResponder
 
 if not sys.warnoptions:
     import warnings

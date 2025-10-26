@@ -8,7 +8,7 @@ to support transport-specific features like resumability.
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from types import JSONRPCMessage, RequestId
+from mcp.types import JSONRPCMessage, RequestId
 
 ResumptionToken = str
 
