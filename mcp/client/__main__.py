@@ -75,12 +75,11 @@ def cli():
     args = parser.parse_args()
     
     if args.llm_query:
-        from .llm_client import LLMClient
+        from .llm_client import run_llm_query
         if not args.api_key:
             print("Error: --api-key required for LLM queries")
             sys.exit(1)
-        client = LLMClient(args.api_key)
-        result = client.query(args.llm_query)
+        result = anyio.run(run_llm_query(args.llm_query, args.api_key), backend="trio")
         print(result)
     else:
         anyio.run(partial(main, args.command_or_url, args.args, args.env), backend="trio")
