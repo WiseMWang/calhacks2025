@@ -7,8 +7,7 @@ import os
 import logging
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.send",
-          "https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 logger = logging.getLogger(__name__)
 
 class GmailTools:

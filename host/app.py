@@ -5,14 +5,17 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from openai import OpenAI
 
 # Add parent directory to path for MCP imports
-sys.path.append(str(Path(__file__).parent.parent))
-from mcp.client.session import ClientSession
-from mcp.client.stdio import StdioServerParameters, stdio_client
-import mcp.types as types
-import json
+parent_dir = str(Path(__file__).parent.parent)
+sys.path.insert(0, parent_dir)
+
+try:
+    from mcp.client.llm_client import LLMClient
+except ImportError:
+    # Fallback: add the specific client directory
+    sys.path.insert(0, os.path.join(parent_dir, 'mcp', 'client'))
+    from llm_client import LLMClient
 
 # Load environment variables
 load_dotenv()
@@ -22,9 +25,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-
-# Initialize OpenAI client
-openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 @app.route('/')
 def index():
@@ -40,8 +40,8 @@ def chat():
         
         logger.info(f"Received message: {user_message}")
         
-        # Use proper MCP client architecture
-        response = asyncio.run(chat_with_mcp_tools(user_message))
+        # Use LLMClient for all LLM interactions
+        response = asyncio.run(chat_with_llm_client(user_message))
         
         return jsonify({
             'success': True,
@@ -55,125 +55,24 @@ def chat():
             'error': str(e)
         }), 500
 
-async def get_mcp_tools():
-    """Get available tools from MCP server using proper client session"""
+async def chat_with_llm_client(user_message):
+    """Chat using LLMClient with MCP tools"""
     try:
-        server_params = StdioServerParameters(command='python', args=['server/mcp_server.py'])
+        # Create LLMClient instance
+        llm_client = LLMClient()
         
-        async with stdio_client(server_params) as (read_stream, write_stream):
-            session = ClientSession(read_stream, write_stream)
-            await session.initialize()
-            
-            # Get tools using proper MCP protocol
-            result = await session.list_tools()
-            
-            # Convert to OpenAI format
-            tools = []
-            for tool in result.tools:
-                tools.append({
-                    "type": "function",
-                    "function": {
-                        "name": tool.name,
-                        "description": tool.description or '',
-                        "parameters": tool.inputSchema
-                    }
-                })
-            
-            return tools
-        
-    except Exception as e:
-        logger.error(f"Error getting MCP tools: {e}")
-        return []
-
-async def call_mcp_tool(tool_name, arguments):
-    """Call a tool via MCP server using proper client session"""
-    try:
-        server_params = StdioServerParameters(command='python', args=['server/mcp_server.py'])
-        
-        async with stdio_client(server_params) as (read_stream, write_stream):
-            session = ClientSession(read_stream, write_stream)
-            await session.initialize()
-            
-            # Call tool using proper MCP protocol
-            result = await session.call_tool(tool_name, arguments)
-            
-            # Extract text from content
-            if result.content and len(result.content) > 0:
-                first_content = result.content[0]
-                if hasattr(first_content, 'text'):
-                    return first_content.text
-            
-            return "Tool executed successfully"
-        
-    except Exception as e:
-        logger.error(f"Error calling MCP tool: {e}")
-        return f"Error: {str(e)}"
-
-async def chat_with_mcp_tools(user_message):
-    """Chat with OpenAI using MCP tools"""
-    try:
-        # Get available tools
-        tools = await get_mcp_tools()
-        logger.info(f"Got {len(tools)} tools from MCP server")
-        
-        # Initial GPT call
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a helpful AI assistant that can send emails via Gmail. When the user asks to send an email, use the send_email tool."
-            },
-            {
-                "role": "user",
-                "content": user_message
-            }
-        ]
-        
-        response = openai_client.chat.completions.create(
-            model=os.getenv('OPENAI_MODEL', 'gpt-4o-mini'),
-            messages=messages,
-            tools=tools if tools else None
+        # Use LLMClient to handle the query with MCP server
+        response = await llm_client.query(
+            user_input=user_message,
+            server_command="python",
+            server_args=["server/mcp_server.py"]
         )
         
-        message = response.choices[0].message
-        
-        # Check if GPT wants to call tools
-        if message.tool_calls:
-            logger.info(f"GPT wants to call {len(message.tool_calls)} tools")
-            
-            # Add assistant message to conversation
-            messages.append(message)
-            
-            # Execute each tool call
-            for tool_call in message.tool_calls:
-                tool_name = tool_call.function.name
-                arguments = json.loads(tool_call.function.arguments)
-                
-                logger.info(f"Calling tool: {tool_name} with args: {arguments}")
-                
-                # Call the tool via MCP
-                result = await call_mcp_tool(tool_name, arguments)
-                
-                # Add tool result to conversation
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": str(result)
-                })
-            
-            # Get final response
-            final_response = openai_client.chat.completions.create(
-                model=os.getenv('OPENAI_MODEL', 'gpt-4o-mini'),
-                messages=messages
-            )
-            
-            return final_response.choices[0].message.content
-        
-        # No tool calls, return response directly
-        return message.content
+        return response
         
     except Exception as e:
-        logger.error(f"Error in chat_with_mcp_tools: {e}", exc_info=True)
+        logger.error(f"Error in chat_with_llm_client: {e}", exc_info=True)
         raise
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5005)
