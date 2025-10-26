@@ -4,6 +4,8 @@ MCP Server - Implements Model Context Protocol from scratch
 Handles JSON-RPC 2.0 requests over stdio
 """
 
+from dotenv import load_dotenv
+import os
 import json
 import sys
 import logging
@@ -11,6 +13,10 @@ from typing import Dict, Any, Callable
 from tools.gmail_tools import GmailTools
 #from tools.drive_tools import DriveTools
 from mcp.types import LATEST_PROTOCOL_VERSION, DEFAULT_NEGOTIATED_VERSION
+
+load_dotenv()
+
+creds_path = os.getenv("GOOGLE_CREDENTIALS_PATH")
 
 # Set up logging to stderr (stdout is used for JSON-RPC communication)
 logging.basicConfig(
@@ -27,7 +33,7 @@ class MCPServer:
     def __init__(self):
         """Initialize MCP server with available tools"""
         # Initialize tool modules
-        self.gmail_tools = GmailTools()
+        self.gmail_tools = GmailTools(credentials_path=creds_path)
        # self.drive_tools = DriveTools()
 
         # Register available tools
