@@ -1,10 +1,18 @@
 from flask import Flask, render_template, request, jsonify
 import logging
-import subprocess
-import json
+import asyncio
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
+
+# Add parent directory to path for MCP imports
+sys.path.append(str(Path(__file__).parent.parent))
+from mcp.client.session import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
+import mcp.types as types
+import json
 
 # Load environment variables
 load_dotenv()
@@ -32,8 +40,8 @@ def chat():
         
         logger.info(f"Received message: {user_message}")
         
-        # Simple approach: Call OpenAI directly with tool definitions
-        response = chat_with_mcp_tools(user_message)
+        # Use proper MCP client architecture
+        response = asyncio.run(chat_with_mcp_tools(user_message))
         
         return jsonify({
             'success': True,
@@ -47,103 +55,65 @@ def chat():
             'error': str(e)
         }), 500
 
-def get_mcp_tools():
-    """Get available tools from MCP server"""
+async def get_mcp_tools():
+    """Get available tools from MCP server using proper client session"""
     try:
-        # Start MCP server
-        proc = subprocess.Popen(
-            ['python', 'server/mcp_server.py'],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+        server_params = StdioServerParameters(command='python', args=['server/mcp_server.py'])
         
-        # Send tools/list request
-        request = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "tools/list",
-            "params": {}
-        }
-        
-        proc.stdin.write((json.dumps(request) + '\n').encode())
-        proc.stdin.flush()
-        
-        # Read response
-        response_line = proc.stdout.readline().decode()
-        response = json.loads(response_line)
-        
-        proc.terminate()
-        
-        # Convert MCP tools to OpenAI format
-        tools = []
-        if 'result' in response and 'tools' in response['result']:
-            for tool in response['result']['tools']:
+        async with stdio_client(server_params) as (read_stream, write_stream):
+            session = ClientSession(read_stream, write_stream)
+            await session.initialize()
+            
+            # Get tools using proper MCP protocol
+            result = await session.list_tools()
+            
+            # Convert to OpenAI format
+            tools = []
+            for tool in result.tools:
                 tools.append({
                     "type": "function",
                     "function": {
-                        "name": tool['name'],
-                        "description": tool.get('description', ''),
-                        "parameters": tool.get('parameters', {})
+                        "name": tool.name,
+                        "description": tool.description or '',
+                        "parameters": tool.inputSchema
                     }
                 })
-        
-        return tools
+            
+            return tools
         
     except Exception as e:
         logger.error(f"Error getting MCP tools: {e}")
         return []
 
-def call_mcp_tool(tool_name, arguments):
-    """Call a tool via MCP server"""
+async def call_mcp_tool(tool_name, arguments):
+    """Call a tool via MCP server using proper client session"""
     try:
-        # Start MCP server
-        proc = subprocess.Popen(
-            ['python', 'server/mcp_server.py'],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+        server_params = StdioServerParameters(command='python', args=['server/mcp_server.py'])
         
-        # Send tool call request
-        request = {
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/call",
-            "params": {
-                "name": tool_name,
-                "arguments": arguments
-            }
-        }
-        
-        proc.stdin.write((json.dumps(request) + '\n').encode())
-        proc.stdin.flush()
-        
-        # Read response
-        response_line = proc.stdout.readline().decode()
-        response = json.loads(response_line)
-        
-        proc.terminate()
-        
-        if 'result' in response:
+        async with stdio_client(server_params) as (read_stream, write_stream):
+            session = ClientSession(read_stream, write_stream)
+            await session.initialize()
+            
+            # Call tool using proper MCP protocol
+            result = await session.call_tool(tool_name, arguments)
+            
             # Extract text from content
-            if 'content' in response['result']:
-                content = response['result']['content']
-                if isinstance(content, list) and len(content) > 0:
-                    return content[0].get('text', str(content))
-            return str(response['result'])
-        
-        return "Tool executed successfully"
+            if result.content and len(result.content) > 0:
+                first_content = result.content[0]
+                if hasattr(first_content, 'text'):
+                    return first_content.text
+            
+            return "Tool executed successfully"
         
     except Exception as e:
         logger.error(f"Error calling MCP tool: {e}")
         return f"Error: {str(e)}"
 
-def chat_with_mcp_tools(user_message):
+async def chat_with_mcp_tools(user_message):
     """Chat with OpenAI using MCP tools"""
     try:
         # Get available tools
-        tools = get_mcp_tools()
+        tools = await get_mcp_tools()
         logger.info(f"Got {len(tools)} tools from MCP server")
         
         # Initial GPT call
@@ -181,7 +151,7 @@ def chat_with_mcp_tools(user_message):
                 logger.info(f"Calling tool: {tool_name} with args: {arguments}")
                 
                 # Call the tool via MCP
-                result = call_mcp_tool(tool_name, arguments)
+                result = await call_mcp_tool(tool_name, arguments)
                 
                 # Add tool result to conversation
                 messages.append({
