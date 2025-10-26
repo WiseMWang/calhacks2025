@@ -7,7 +7,8 @@ import os
 import logging
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+SCOPES = ["https://www.googleapis.com/auth/gmail.send",
+          "https://www.googleapis.com/auth/gmail.readonly"]
 logger = logging.getLogger(__name__)
 
 class GmailTools:
@@ -15,6 +16,11 @@ class GmailTools:
         creds_path = credentials_path or os.path.join(os.path.dirname(__file__), "../../credentials/credentials.json")
         token_path = os.path.join(os.path.dirname(__file__), "../../token.json")
         self.service = self._build_service(creds_path, token_path)
+
+    def get_authenticated_email(self):
+        """Return the Gmail account used by this MCP server"""
+        profile = self.service.users().getProfile(userId="me").execute()
+        return profile.get("emailAddress")
 
     def _build_service(self, creds_path: str, token_path: str):
         """Authenticate with Gmail and return a Gmail API service."""
